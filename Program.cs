@@ -1,9 +1,13 @@
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<SiteContext>( x => x.UseSqlServer(""));
 
 var app = builder.Build();
 
@@ -16,25 +20,25 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
+app.MapGet("/weatherforecast", async (SiteContext context) =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    return await context.Set<WeatherForecast>().ToArrayAsync();
+});
 
-app.MapGet("/weatherforecast", () =>
+app.MapGet("/weatherforecast/{id}", async (SiteContext context, string id) =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
+    return await context.Set<WeatherForecast>().Where(x => x.Summary == id).ToArrayAsync();
+});
+
+
+app.MapGet("/v2/weatherforecast/{id}", async (SiteContext context, string id) =>
+{
+    return await context.Database.SqlQuery<WeatherForecast>($"Select * from wf where Summary = {id}").ToArrayAsync();
 })
-.WithName("GetWeatherForecast")
 .WithOpenApi();
+
+
+
 
 app.Run();
 
