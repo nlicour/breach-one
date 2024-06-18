@@ -33,7 +33,8 @@ app.MapGet("/weatherforecast/{id}", async (SiteContext context, string id) =>
 
 app.MapGet("/v2/weatherforecast/{id}", async (SiteContext context, string id) =>
 {
-    return await context.Database.SqlQuery<WeatherForecast>($"Select * from wf where Summary = {id}").ToArrayAsync();
+    return await context.Set<WeatherForecast>().FromSql($"Select * from wf where Summary = {id}").ToArrayAsync();
+    // return await context.Database.SqlQuery<WeatherForecast>($"Select * from wf where Summary = {id}").ToArrayAsync();
 })
 .WithOpenApi();
 
